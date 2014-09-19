@@ -14,59 +14,67 @@
 # although using $HOME does work.
 
 
+# ===== CONFIGURABLE OPTIONS =====
+# Set this to true if you want debug output
+DEBUG_MODE_ENABLED=0 # Set to 1 for true (debugging enabled), or 0 for false (debugging statements suppressed).
+
+
+
+# ---------- DO NOT EDIT ANYTHING BELOW THIS LINE, UNLESS YOU KNOW WHAT YOU'RE DOING -----------
+
 # ===== GLOBAL CONSTANTS =====
 # This is where Xcode installs simulators. Accurate as at Xcode 6.0.1.
 BASE_SIMULATORS_PATH="$HOME/Library/Developer/CoreSimulator/Devices"
+
 
 # UIAutomation Instruments Template location. Accurate as at Xcode 6.0.1.
 INSTRUMENTS_AUTOMATION_TEMPLATE_PATH="/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents"\
 "/PlugIns/AutomationInstrument.xrplugin/Contents/Resources/Automation.tracetemplate" # DO NOT CHANGE INDENTATION!
 
-# Set this to true if you want debug output
-DEBUG_MODE_ENABLED=0 # Set to 1 for true (debugging enabled), or 0 for false (debugging statements suppressed).
 
+
+# ===== COMMAND LINE ARGUMENTS RETRIEVAL =====
+
+# Place the command line arguments to this shell script into global variables that other functions will be
+# able to make use of. All of these parameters are mandatory, otherwise we'll messs up downstream function calls.
+SIMULATOR_NAME_OR_DEVICE_UDID=$1
+TEST_APP_NAME=$2
+JAVASCRIPT_TEST_FILE=$3
+BASE_TEST_SCRIPTS_PATH=$4
+TEST_RESULTS_OUTPUT_PATH=$5
+
+
+
+# ===== FUNCTIONS =====
 
 main() {
     _save_and_clear_internal_field_separator
 
     if [ ${DEBUG_MODE_ENABLED} -eq 1 ]; then
-        echo "main(): Launched script ui_automation_runner.sh."
+        echo "main(): Launched script" $0
     fi
-
-
-    # ===== START: TYPICAL MODIFICATIONS =====
-    # Configurable paths and names as suitable for your app under test:
-
-    local base_test_scripts_path="$HOME/Developer/clients/all/icpd/icpd-pkpd-calculator/PKPDCalculatorAutomationTests/"
-    local test_app_name="PKPDCalculator"
-    local test_file_name="TestRunner.js"
-    local simulator_name="iPhone 5s6" # Make this pull from command line, but default to something if nothing on the command line
-    #SIMULATOR_NAME="iPad Air"
-    simulator_name="f04d9cefeccf5013e4ce99db955e68d6ce1551c4"
-    local test_results_output_path="$HOME/Developer/clients/all/icpd/icpd-pkpd-calculator/PKPDCalculatorAutomationTests/TestResults/"
-    # ===== END: TYPICAL MODIFICATIONS =====
 
     # Determine the UDID of the simulator we are to use. With Xcode 6.0.1, you can name the simulators as you wish,
     # and they are all given UDIDs that form part of the file path to get to the .app. We can read the device.plist
     # file instead each simulator directory, to figure out which one is ours.
-    local simulator_path=`_find_specific_simulator ${BASE_SIMULATORS_PATH} ${simulator_name}`
+    local simulator_path=`_find_specific_simulator ${BASE_SIMULATORS_PATH} ${SIMULATOR_NAME_OR_DEVICE_UDID}`
 
     if [ ${DEBUG_MODE_ENABLED} -eq 1 ]; then
         echo "main(): Just searched for simulator_path and got this result:" ${simulator_path}
     fi
 
     if [ ${simulator_path} == "Simulator Not Found" ]; then
-        echo "main(): Couldn't find a simulator with name '"${simulator_name}"'. Using this as a device UDID instead"
-        simulator_path=${simulator_name}
+        echo "main(): Couldn't find a simulator with name '"${SIMULATOR_NAME_OR_DEVICE_UDID}"'. Using this as a device UDID instead"
+        simulator_path=${SIMULATOR_NAME_OR_DEVICE_UDID}
     fi
 
-    # ===== RUN THE COMMAND =====
-    _run_automation_instrument ${test_app_name} \
-        ${base_test_scripts_path} \
-        ${test_file_name} \
+    # We're now calling the function that runs the actual instruments command:
+    _run_automation_instrument ${TEST_APP_NAME} \
+        ${BASE_TEST_SCRIPTS_PATH} \
+        ${JAVASCRIPT_TEST_FILE} \
         ${simulator_path} \
-        ${simulator_name} \
-        ${test_results_output_path}
+        ${SIMULATOR_NAME_OR_DEVICE_UDID} \
+        ${TEST_RESULTS_OUTPUT_PATH}
 
     _restore_prior_interal_field_separator
 }
@@ -85,7 +93,7 @@ _restore_prior_interal_field_separator() {
 }
 
 
-# _find_app_path_navigating_chaging_guid
+# _find_app_path_navigating_changing_guid
 # Created by @idStar - Sohail Ahmed
 # This script finds the guid for a given iOS simulator app. Use in a pipe to get the full path
 #
@@ -95,7 +103,7 @@ _restore_prior_interal_field_separator() {
 # The Simulator Path should be something like: "$HOME/Library/Developer/CoreSimulator/Devices/05BB8391-CCB5-47D8-952E-BA3AF342C891"
 # It is basically some parent folder under which recursive traversal would eventually find the app sought.
 # The App Name should include the .app suffix. It should already be built for the simulator, in order for us to find it.
-_find_app_path_navigating_chaging_guid() {
+_find_app_path_navigating_changing_guid() {
     # Retrieve parameters:
     local specific_simulator_path=$1
     local test_app_name=$2
@@ -145,7 +153,7 @@ _find_specific_simulator() {
             # Our return value is the full path of the matching simulator:
             local specific_simulator_path_found=${DEVICE_DIRECTORY}
             echo "$specific_simulator_path_found"
-            break
+            return # We got what we came for; this confirms that we're going to use the simulator
         fi
     done
 
@@ -201,7 +209,7 @@ _run_automation_instrument() {
     else
         # NO. We received a distinct value for the specific simulator path, which means we should proceed hunting
         # through that path's child folders for the matching app:
-        fully_qualified_app_path_or_app_name_on_device=`_find_app_path_navigating_chaging_guid ${specific_simulator_path} ${test_app_name}`
+        fully_qualified_app_path_or_app_name_on_device=`_find_app_path_navigating_changing_guid ${specific_simulator_path} ${test_app_name}`
     fi
 
 
@@ -211,7 +219,7 @@ _run_automation_instrument() {
     # Instruments will dump a .trace file in the directory from which this script is launched.
     cd ${test_results_output_path}
 
-    # ===== RUN THE COMMAND =====
+    # Invoke the actual instruments command line tool from Apple:
     instruments -t ${INSTRUMENTS_AUTOMATION_TEMPLATE_PATH} \
                 -w ${simulator_name_or_device_udid} \
                 ${fully_qualified_app_path_or_app_name_on_device} \
@@ -219,6 +227,9 @@ _run_automation_instrument() {
                 -e UIARESULTSPATH ${test_results_output_path}
 }
 
+
+
+# ===== KICKING IT ALL OFF =====
 
 main # Runs this script
 
