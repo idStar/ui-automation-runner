@@ -303,8 +303,9 @@ _run_automation_instrument() {
 
     # Build the command line string, with all of the needed parameters and switches:
     local linebreak_formatting=$'\n\t'
-    local instruments_command="instruments -t '$INSTRUMENTS_AUTOMATION_TEMPLATE_PATH' \\"${linebreak_formatting}
+    local instruments_command="instruments "
     instruments_command+="-w '$simulator_name_or_device_udid' \\"${linebreak_formatting}
+    instruments_command+="-t '$INSTRUMENTS_AUTOMATION_TEMPLATE_PATH' \\"${linebreak_formatting}
     instruments_command+="'$fully_qualified_app_path_or_on_device_app_name' \\"${linebreak_formatting}
     instruments_command+="-e UIASCRIPT '$automation_test_script_path' \\"${linebreak_formatting}
     instruments_command+="-e UIARESULTSPATH '$test_results_output_path'"
