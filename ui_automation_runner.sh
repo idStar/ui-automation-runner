@@ -113,6 +113,12 @@ main() {
         simulator_path=${SIMULATOR_NAME_OR_DEVICE_UDID}
     fi
 
+    if  [[ $JAVASCRIPT_TEST_FILE_NAME == *".coffee" ]]; then
+      echo "Compiling $JAVASCRIPT_TEST_FILE_NAME Coffee to js"
+      coffee -c "$JAVASCRIPT_TEST_FILES_DIRECTORY/$JAVASCRIPT_TEST_FILE_NAME"
+      JAVASCRIPT_TEST_FILE_NAME="${JAVASCRIPT_TEST_FILE_NAME%.*}.js"
+    fi
+    
     # We're now calling the function that runs the actual instruments command:
     _run_automation_instrument ${TEST_APP_NAME} \
         ${JAVASCRIPT_TEST_FILES_DIRECTORY} \
