@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run_tests.sh
-# Created by Sohail Ahmed
+# Created by Sohail A.
 # @idStar
 
 # This script is a companion to the script ui_automation_runner.sh, which is designed not to be edited.
