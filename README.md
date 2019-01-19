@@ -65,7 +65,7 @@ Best place to reach me is on Twitter. I don't imagine there would be too much di
 
 * blog: [sohail.io](http://sohail.io)
 * twitter: [@idStar](https://twitter.com/idStar)
-* app.net: [@sohail](https://alpha.app.net/sohail)
+
 
 
 # License
