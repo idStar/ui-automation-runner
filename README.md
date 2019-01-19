@@ -61,7 +61,7 @@ This script is not meant to be the kitchen sink, but it is meant to be easy to m
 
 Best place to reach me is on Twitter. I don't imagine there would be too much discussion around these couple of scripts. If you've had to make corrections to get things to work, certainly, that would be handy to know.
 
--- Sohail Ahmed
+-- Sohail 
 
 * blog: [sohail.io](http://sohail.io)
 * twitter: [@idStar](https://twitter.com/idStar)
